@@ -18,6 +18,7 @@ type apiConfig struct {
 	db             *database.Queries
 	platform       string
 	tS             string
+	polkaKey       string
 }
 
 func main() {
@@ -37,10 +38,15 @@ func main() {
 	if tokenSecret == "" {
 		log.Fatal("tokenSecret must be set")
 	}
+	polka := os.Getenv("POLKA_KEY")
+	if polka == "" {
+		log.Fatal("POLKA_KEY must be set")
+	}
 	dbConn, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatalf("Error opening database: %s", err)
 	}
+
 	dbQueries := database.New(dbConn)
 
 	apiCfg := apiConfig{
@@ -48,6 +54,7 @@ func main() {
 		db:             dbQueries,
 		platform:       platform,
 		tS:             tokenSecret,
+		polkaKey:       polka,
 	}
 
 	mux := http.NewServeMux()
@@ -56,7 +63,7 @@ func main() {
 
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
 	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.handlerChirpsGet)
-	mux.HandleFunc("GET /api/chirps/", apiCfg.handlerReturn)
+	mux.HandleFunc("GET /api/chirps", apiCfg.handlerReturn)
 
 	mux.HandleFunc("POST /api/chirps", apiCfg.handlerChirpsValidate)
 	mux.HandleFunc("POST /api/login", apiCfg.handlerLogin)

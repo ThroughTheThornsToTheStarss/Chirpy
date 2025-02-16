@@ -1,6 +1,7 @@
 package main
 
 import (
+	"chirpy/internal/database"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -30,23 +31,46 @@ func (cfg *apiConfig) handlerChirpsGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *apiConfig) handlerReturn(w http.ResponseWriter, r *http.Request) {
-	chirps, err := cfg.db.GetChirps(r.Context())
+	var chirps []database.Chirp
+	var err error
+
+	sortParam := r.URL.Query().Get("sort")
+	authorID := r.URL.Query().Get("author_id")
+
+	if authorID != "" {
+		chirpID, err := uuid.Parse(authorID)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid chirp ID", err)
+			return
+		}
+		chirps, err = cfg.db.GetChirpByUser(r.Context(), chirpID)
+	} else if sortParam == "desc" {
+		chirps, err = cfg.db.GetChirpsDECS(r.Context())
+	} else {
+		// Default case (asc or no sort parameter)
+		chirps, err = cfg.db.GetChirps(r.Context())
+	}
+
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't return parameters", err)
 		return
 	}
 
-	chripsDtos := make([]Chirps, 0, len(chirps))
+	res := getmiddlchirp(chirps)
+	respondWithJSON(w, http.StatusOK, res)
+}
 
-	for i := 0; len(chirps) > i; i++ {
-		chripsDtos = append(chripsDtos, Chirps{
-			ID:        chirps[i].ID,
-			CreatedAt: chirps[i].CreatedAt,
-			UpdatedAt: chirps[i].UpdatedAt,
-			Body:      chirps[i].Body,
-			UserID:    chirps[i].UserID,
+func getmiddlchirp(dbChirps []database.Chirp) []Chirps {
+	chirpsDtos := make([]Chirps, 0, len(dbChirps))
+
+	for i := 0; i < len(dbChirps); i++ {
+		chirpsDtos = append(chirpsDtos, Chirps{
+			ID:        dbChirps[i].ID,
+			CreatedAt: dbChirps[i].CreatedAt,
+			UpdatedAt: dbChirps[i].UpdatedAt,
+			Body:      dbChirps[i].Body,
+			UserID:    dbChirps[i].UserID,
 		})
 	}
-	respondWithJSON(w, http.StatusOK, chripsDtos)
-
+	return chirpsDtos
 }

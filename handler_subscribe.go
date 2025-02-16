@@ -1,6 +1,7 @@
 package main
 
 import (
+	"chirpy/internal/auth"
 	"encoding/json"
 	"net/http"
 
@@ -17,10 +18,18 @@ func (cfg *apiConfig) handlerSubscribe(w http.ResponseWriter, r *http.Request) {
 		Event string            `json:"event"`
 		Data  map[string]string `json:"data"`
 	}
-
+	polka, err := auth.GetAPIKey(r.Header)
+	if err != nil {
+		respondWithError(w, 401, "Whong header", err)
+		return
+	}
+	if polka != cfg.polkaKey {
+		w.WriteHeader(401)
+		return
+	}
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
-	err := decoder.Decode(&params)
+	err = decoder.Decode(&params)
 	if err != nil {
 		respondWithError(w, 500, "Can't decode input parametes", err)
 		return

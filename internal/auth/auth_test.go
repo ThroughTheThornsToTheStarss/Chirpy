@@ -53,3 +53,12 @@ func TestGetBearerToken(t *testing.T) {
 		t.Errorf("expected token to be %s, but got %s", expectedToken, testString)
 	}
 }
+
+func TestGetAPIKey(t *testing.T) {
+	headers := http.Header{
+		"Authorization": {"ApiKey f271c81ff7084ee5b99a5091b42d486e"},
+	}
+	polka, _ := GetAPIKey(headers)
+
+	t.Logf("%s", polka)
+}

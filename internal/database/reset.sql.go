@@ -17,3 +17,12 @@ func (q *Queries) Reset(ctx context.Context) error {
 	_, err := q.db.ExecContext(ctx, reset)
 	return err
 }
+
+const resetRFToken = `-- name: ResetRFToken :exec
+DELETE FROM refresh_tokens
+`
+
+func (q *Queries) ResetRFToken(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, resetRFToken)
+	return err
+}

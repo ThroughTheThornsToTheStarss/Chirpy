@@ -33,7 +33,6 @@ func main() {
 	if platform == "" {
 		log.Fatal("PLATFORM must be set")
 	}
-
 	tokenSecret := os.Getenv("TOKENSECRET")
 	if tokenSecret == "" {
 		log.Fatal("tokenSecret must be set")
@@ -61,6 +60,8 @@ func main() {
 
 	mux.HandleFunc("POST /api/chirps", apiCfg.handlerChirpsValidate)
 	mux.HandleFunc("POST /api/login", apiCfg.handlerLogin)
+	mux.HandleFunc("POST /api/refresh", apiCfg.handlerRefresh)
+	mux.HandleFunc("POST /api/revoke", apiCfg.handlerRevoke)
 
 	mux.HandleFunc("POST /api/users", apiCfg.handlerUsersCreate)
 

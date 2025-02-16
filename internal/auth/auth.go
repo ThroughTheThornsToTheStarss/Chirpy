@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log"
@@ -104,4 +106,13 @@ func GetBearerToken(headers http.Header) (string, error) {
 		return "", fmt.Errorf("autorization token value is empty")
 	}
 	return tokenStr, nil
+}
+
+func MakeRefreshToken() (string, error) {
+	key := make([]byte, 32)
+	_, err := rand.Read(key)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(key), nil
 }
